@@ -3,25 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View PDF Document</title>
+    <title>View PDF as Images</title>
     <style>
         body {
             margin: 0;
-            padding: 0;
+            padding: 20px;
+            background-color: #f5feff;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: #f5feff;
+            flex-direction: column;
+            gap: 20px;
         }
-        iframe {
-            width: 80%;
-            height: 80%;
-            border: none;
+        canvas {
+            max-width: 90%;
+            height: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
-    <iframe src="https://raw.githubusercontent.com/username/your-repo/branch/FiveDesignSheets_JaidynArneill.pdf" allowfullscreen></iframe>
+    <div id="pdf-container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script>
+        const url = 'https://raw.githubusercontent.com/username/your-repo/branch/FiveDesignSheets_JaidynArneill.pdf';
+
+        // Load PDF.js
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+
+        const container = document.getElementById('pdf-container');
+
+        // Load and render the PDF
+        pdfjsLib.getDocument(url).promise.then(pdfDoc => {
+            for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+                pdfDoc.getPage(pageNum).then(page => {
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    const scale = 1.5; // Adjust scale for quality
+                    const viewport = page.getViewport({ scale: scale });
+
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise.then(() => {
+                        container.appendChild(canvas);
+                    });
+                });
+            }
+        }).catch(error => {
+            console.error('Error loading PDF:', error);
+        });
+    </script>
 </body>
 </html>
